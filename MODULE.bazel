@@ -1,0 +1,39 @@
+"""Define bazel dependencies."""
+
+module(
+    name = "modular",
+    version = "0",
+)
+
+include("//bazel:common.MODULE.bazel")
+
+mojo_aliases = use_repo_rule("//bazel:mojo_aliases.bzl", "mojo_aliases")
+
+mojo_aliases(name = "mojo")
+
+macos_sysroot_repository = use_repo_rule("//bazel/internal/cc-toolchain:macos_sysroot_repository.bzl", "macos_sysroot_repository")
+
+macos_sysroot_repository(name = "sysroot-macos")
+
+# SDLC-4549: the prebuilt path is gone. `bazel/mojo.MODULE.bazel` (which unpacked
+# the nightly wheel via `rebuild_wheel` and pulled the prebuilt `@mojo_toolchains`
+# compiler) is no longer generated or included; the whole tree builds from source.
+
+link_hack = use_repo_rule("//bazel/internal:link_hack.bzl", "link_hack")
+
+link_hack(
+    name = "build_bazel_rules_android",  # See link_hack.bzl for details
+)
+
+register_toolchains(
+    "//bazel/internal:mojo_toolchain",
+    "//bazel/internal/cc-toolchain:all",
+    "//bazel/internal:mojo_copts_toolchain",
+    "//bazel/internal:pyo3_toolchain",
+)
+
+include("//bazel/public-patches:llvm.MODULE.bazel")
+
+cfg_workaround = use_repo_rule("//bazel/internal:cfg_workaround.bzl", "cfg_workaround")
+
+cfg_workaround(name = "cfg_workaround.bzl")
